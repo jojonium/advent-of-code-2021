@@ -1,6 +1,6 @@
 import {promises as fsPromises} from 'fs';
 
-const inputFile = process.argv[2] ?? 'inputs/day1.txt';
+const inputFile = process.argv[2] ?? 'inputs/day01.txt';
 
 (async () => {
   const nums = (await fsPromises.readFile(inputFile))
