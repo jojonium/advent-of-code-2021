@@ -21,6 +21,6 @@ const inputFile = process.argv[2] ?? 'inputs/day06.txt';
     return birthdays.reduce((sum, x) => sum + x.adult + x.young, 0);
   }
 
-  console.log('Part 2: ' + solve(80, initialState));
+  console.log('Part 1: ' + solve(80, initialState));
   console.log('Part 2: ' + solve(256, initialState));
 })();
