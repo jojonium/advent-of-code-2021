@@ -16,8 +16,8 @@ const inputFile = process.argv[2] ?? 'inputs/day09.txt';
         lowerThan:
           +(point < (row[x + 1] ?? Infinity)) +
           +(point < (row[x - 1] ?? Infinity)) +
-          +(y === 0 || point < (hgts[y - 1]!![x] ?? Infinity)) +
-          +(y === hgts.length - 1 || point < (hgts[y + 1]!![x] ?? Infinity)),
+          +(point < ((hgts[y - 1] ?? [])[x] ?? Infinity)) +
+          +(point < ((hgts[y + 1] ?? [])[x] ?? Infinity)),
         height: point
       })
       ).filter(a => a.lowerThan === 4)
