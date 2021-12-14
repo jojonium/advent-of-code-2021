@@ -27,9 +27,15 @@ const run = (line: string, map: Map<string, string>, steps: number): number => {
   }, {} as {[key: string]: number});
   const sorted = Object.entries(letterCounts).sort((a, b) => a[1] - b[1]);
   // Each letter belongs to two different pairs and therefore gets counted
-  // twice, EXCEPT for the first and last letter. The answer will either be
-  // this number, n-1, or n-2.
-  return Math.ceil((sorted[sorted.length - 1]!![1] / 2) - (sorted[0]!![1] / 2));
+  // twice, EXCEPT for the first and last letter.
+  const max = sorted[sorted.length - 1]!!;
+  const min = sorted[0]!!;
+  const firstChar = line.substring(0, 1);
+  const lastChar = line.substring(line.length - 1);
+  let answer = max[1] - min[1];
+  if (max[0] === firstChar || min[0] === firstChar) answer++;
+  if (max[0] === lastChar || min[0] === lastChar) answer++;
+  return answer / 2;
 };
 
 (async () => {
