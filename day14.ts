@@ -20,22 +20,16 @@ const run = (line: string, map: Map<string, string>, steps: number): number => {
     pairCounts = npc;
   }
   const letterCounts = Object.entries(pairCounts).reduce((lc, entry) => {
-    for (const char of entry[0].split('')) {
-      lc[char] = (lc[char] ?? 0) + entry[1];
-    }
+    const char = entry[0].substring(0, 1);
+    lc[char] = (lc[char] ?? 0) + entry[1];
     return lc;
   }, {} as {[key: string]: number});
-  const sorted = Object.entries(letterCounts).sort((a, b) => a[1] - b[1]);
-  // Each letter belongs to two different pairs and therefore gets counted
-  // twice, EXCEPT for the first and last letter.
-  const max = sorted[sorted.length - 1]!!;
-  const min = sorted[0]!!;
-  const firstChar = line.substring(0, 1);
+  // Remember to count last character.
   const lastChar = line.substring(line.length - 1);
-  let answer = max[1] - min[1];
-  if (max[0] === firstChar || min[0] === firstChar) answer++;
-  if (max[0] === lastChar || min[0] === lastChar) answer++;
-  return answer / 2;
+  letterCounts[lastChar] = (letterCounts[lastChar] ?? 0) + 1;
+  const sorted = Object.entries(letterCounts).sort((a, b) => a[1] - b[1]);
+  const answer = sorted[sorted.length - 1]!![1] - sorted[0]!![1]
+  return answer;
 };
 
 (async () => {
