@@ -2,15 +2,9 @@ import {promises as fsPromises} from 'fs';
 
 const inputFile = process.argv[2] ?? 'inputs/day17.txt';
 
-type Point = {
-  x: number,
-  y: number
-};
+type Point = {x: number, y: number};
 
-type Rectangle = {
-  tl: Point,
-  br: Point
-};
+type Rectangle = {tl: Point, br: Point};
 
 const sim = (
   dx: number,
@@ -22,18 +16,13 @@ const sim = (
   while (true) {
     pos.x += dx;
     pos.y += dy;
-    dx -= 1 * Math.sign(dx);
+    dx -= Math.sign(dx);
     dy -= 1;
     maxHeight = Math.max(maxHeight, pos.y);
-    //console.log(pos);
 
     // Check if we are in the target area.
-    if (
-      pos.x >= target.tl.x &&
-      pos.x <= target.br.x &&
-      pos.y <= target.tl.y &&
-      pos.y >= target.br.y
-    ) {
+    if (pos.x >= target.tl.x && pos.x <= target.br.x &&
+      pos.y <= target.tl.y && pos.y >= target.br.y) {
       return {hitTarget: true, maxHeight}
     }
 
@@ -54,7 +43,7 @@ const sim = (
   let ysSinceLastHit = 0;
   let part1 = 0;
   let part2Set = new Set<string>();
-  for (let dy = target.br.y; dy <= Infinity; ++dy) {
+  for (let dy = target.br.y; dy < Infinity; ++dy) {
     ysSinceLastHit++;
     for (let dx = 1; dx <= target.br.x; ++dx) {
       const {hitTarget, maxHeight} = sim(dx, dy, target);
