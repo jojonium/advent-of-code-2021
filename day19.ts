@@ -9,19 +9,23 @@ type Point = {
 };
 
 const orientations: ((p: Point) => Point)[] = [
-  (p: Point) => ({x: p.x, y: p.y, z: p.z}),   // Facing North.
-  (p: Point) => ({x: -p.z, y: p.y, z: p.x}),  // Facing East.
-  (p: Point) => ({x: -p.x, y: p.y, z: -p.z}), // Facing South.
-  (p: Point) => ({x: p.z, y: p.y, z: -p.x}),  // Facing West
-  (p: Point) => ({x: p.x, y: -p.z, z: p.y}),  // Facing Up.
-  (p: Point) => ({x: -p.x, y: p.z, z: -p.y}), // Facing Down.
+  (p: Point) => ({x: p.x, y: p.y, z: p.z}),
+  (p: Point) => ({x: p.y, y: p.x, z: p.z}),
+  (p: Point) => ({x: p.x, y: p.z, z: p.y}),
+  (p: Point) => ({x: p.z, y: p.y, z: p.x}),
+  (p: Point) => ({x: p.z, y: p.x, z: p.y}),
+  (p: Point) => ({x: p.y, y: p.z, z: p.x}),
 ];
 
 const rotations: ((p: Point) => Point)[] = [
-  (p: Point) => ({x: p.x, y: p.y, z: p.z}),   // Rotate   0 degrees.
-  (p: Point) => ({x: -p.y, y: p.x, z: p.z}),  // Rotate  90 degrees.
-  (p: Point) => ({x: -p.x, y: -p.y, z: p.z}), // Rotate 180 degrees.
-  (p: Point) => ({x: p.y, y: -p.x, z: p.z}),  // Rotate 270 degrees.
+  (p: Point) => ({x: p.x, y: p.y, z: p.z}),
+  (p: Point) => ({x: -p.x, y: p.y, z: p.z}),
+  (p: Point) => ({x: p.x, y: -p.y, z: p.z}),
+  (p: Point) => ({x: p.x, y: p.y, z: -p.z}),
+  (p: Point) => ({x: -p.x, y: -p.y, z: p.z}),
+  (p: Point) => ({x: p.x, y: -p.y, z: -p.z}),
+  (p: Point) => ({x: -p.x, y: p.y, z: -p.z}),
+  (p: Point) => ({x: -p.x, y: -p.y, z: -p.z}),
 ]
 
 const adjustPoints = (
@@ -48,7 +52,7 @@ const adjustPoints = (
       const diffY = Object.entries(commonY).filter(([_, c]) => +c >= 12);
       const diffZ = Object.entries(commonZ).filter(([_, c]) => +c >= 12);
       if (diffX.length > 0 && diffY.length > 0 && diffZ.length > 0) {
-        console.log('Woohoo!');
+        //console.log('Woohoo!');
         const offset = {
           x: -diffX[0]!![0],
           y: -diffY[0]!![0],
@@ -129,15 +133,11 @@ const adjustPoints = (
       }
     }
   }
-  let i = 0;
   const realPoints = new Set<string>();
   for (const scanner of scanners) {
-    console.log(`=== Scanner ${i} === `);
-    console.log(`Overlaps with ${scanner.relativeTo} `);
-    console.log(scanner.position);
     scanner.points.forEach(p => realPoints.add(`${p.x},${p.y},${p.z}`));
-    i++;
   }
-  console.log(realPoints.size);
+  console.log('Part 1: ' + realPoints.size);
+
 })();
 
