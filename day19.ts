@@ -8,35 +8,21 @@ type Point = {
   z: number
 };
 
-const orient = (d: number): ((p: Point) => Point) =>
-  ({
-    0: (p: Point) => ({x: p.x, y: p.y, z: p.z}),   // Facing North.
-    1: (p: Point) => ({x: -p.z, y: p.y, z: p.x}),  // Facing East.
-    2: (p: Point) => ({x: -p.x, y: p.y, z: -p.z}), // Facing South.
-    3: (p: Point) => ({x: p.z, y: p.y, z: -p.x}),  // Facing West
-    4: (p: Point) => ({x: p.x, y: -p.z, z: p.y}),  // Facing Up.
-    5: (p: Point) => ({x: -p.x, y: p.z, z: -p.y}), // Facing Down.
-  })[d]!!;
+const orientations: ((p: Point) => Point)[] = [
+  (p: Point) => ({x: p.x, y: p.y, z: p.z}),   // Facing North.
+  (p: Point) => ({x: -p.z, y: p.y, z: p.x}),  // Facing East.
+  (p: Point) => ({x: -p.x, y: p.y, z: -p.z}), // Facing South.
+  (p: Point) => ({x: p.z, y: p.y, z: -p.x}),  // Facing West
+  (p: Point) => ({x: p.x, y: -p.z, z: p.y}),  // Facing Up.
+  (p: Point) => ({x: -p.x, y: p.z, z: -p.y}), // Facing Down.
+];
 
-const rotate = (o: number): ((p: Point) => Point) =>
-  ({
-    0: (p: Point) => ({x: p.x, y: p.y, z: p.z}),   // Rotate   0 degrees.
-    1: (p: Point) => ({x: -p.y, y: p.x, z: p.z}),  // Rotate  90 degrees.
-    2: (p: Point) => ({x: -p.x, y: -p.y, z: p.z}), // Rotate 180 degrees.
-    3: (p: Point) => ({x: p.y, y: -p.x, z: p.z}),  // Rotate 270 degrees.
-  })[o]!!;
-
-const rotations: ((p: Point) => Point)[] =
-  [0, 1, 2, 3].map(d => p => rotate(d)(p));
-const orientations: ((p: Point) => Point)[] =
-  [0, 1, 2, 3, 4, 5].map(o => p => orient(o)(p));
-
-/*
-const permutationFuncs: ((p: Point) => Point)[] =
-  [0, 1, 2, 3, 4, 5].flatMap(o => [0, 1, 2, 3].map(d =>
-    p => orient(o)(rotate(d)(p))
-  ));
- */
+const rotations: ((p: Point) => Point)[] = [
+  (p: Point) => ({x: p.x, y: p.y, z: p.z}),   // Rotate   0 degrees.
+  (p: Point) => ({x: -p.y, y: p.x, z: p.z}),  // Rotate  90 degrees.
+  (p: Point) => ({x: -p.x, y: -p.y, z: p.z}), // Rotate 180 degrees.
+  (p: Point) => ({x: p.y, y: -p.x, z: p.z}),  // Rotate 270 degrees.
+]
 
 const adjustPoints = (
   scanner: Point[],
@@ -47,7 +33,7 @@ const adjustPoints = (
       const commonX = {} as {[key: string]: number};
       const commonY = {} as {[key: string]: number};
       const commonZ = {} as {[key: string]: number};
-      const permutation = scanner.map(p => rotation(orientation((p))));
+      const permutation = scanner.map(p => rotation(orientation(p)));
       for (const point of permutation) {
         for (const other of base) {
           const xKey = (point.x - other.x).toString();
@@ -64,9 +50,9 @@ const adjustPoints = (
       if (diffX.length > 0 && diffY.length > 0 && diffZ.length > 0) {
         console.log('Woohoo!');
         const offset = {
-          x: -1 * +diffX[0]!![0],
-          y: -1 * +diffY[0]!![0],
-          z: -1 * +diffZ[0]!![0],
+          x: -diffX[0]!![0],
+          y: -diffY[0]!![0],
+          z: -diffZ[0]!![0],
         };
         return {
           points: permutation.map(p => ({
@@ -105,10 +91,8 @@ const adjustPoints = (
       rotation: (p: Point) => p,
     }))
 
-  const realPoints = new Set<string>();
   scanners[0]!!.position = {x: 0, y: 0, z: 0};
   scanners[0]!!.overlapsWith = 0;
-  scanners[0]!!.points.forEach(p => realPoints.add(`${p.x},${p.y},${p.z}`));
 
   let numSolved = 1;
 
@@ -117,7 +101,9 @@ const adjustPoints = (
       if (scanners[i]!!.overlapsWith !== undefined) continue; // Already solved.
       for (let j = 0; j < scanners.length; ++j) {
         if (i === j) continue;
-        if (scanners[j]!!.overlapsWith === undefined) continue;
+        if (scanners[j]!!.overlapsWith === undefined) continue; // Not solved.
+        // B is already adjusted to be relative to Scanner 0.
+        console.log(`Trying to match ${i} with ${j}`);
         const a = scanners[i]!!;
         const b = scanners[j]!!;
         let {
@@ -132,26 +118,27 @@ const adjustPoints = (
         }
         numSolved++;
         a.overlapsWith = j;
+        a.points = adjustedPoints;
         a.rotation = rotation;
         a.orientation = orientation;
-        offset = b.orientation(b.rotation(offset));
         a.position = {
-          x: offset.x + b.position!!.x,
-          y: offset.y + b.position!!.y,
-          z: offset.z + b.position!!.z,
+          x: offset.x,
+          y: offset.y,
+          z: offset.z
         };
-        console.log(`${i} overlaps with ${j}`);
         break;
       }
     }
-    let i = 0;
-    for (const scanner of scanners) {
-      console.log(`=== Scanner ${i} === `);
-      console.log(`Overlaps with ${scanner.overlapsWith} `);
-      console.log(scanner.position);
-      i++;
-    }
   }
-  //console.log(realPoints.size);
+  let i = 0;
+  const realPoints = new Set<string>();
+  for (const scanner of scanners) {
+    console.log(`=== Scanner ${i} === `);
+    console.log(`Overlaps with ${scanner.overlapsWith} `);
+    console.log(scanner.position);
+    scanner.points.forEach(p => realPoints.add(`${p.x},${p.y},${p.z}`));
+    i++;
+  }
+  console.log(realPoints.size);
 })();
 
