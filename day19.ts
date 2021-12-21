@@ -80,52 +80,51 @@ const adjustPoints = (
     .toString()
     .trim()
     .split('\n\n')
-    .map(para => ({
+    .map((para, scannerIndex) => ({
       points: para.split('\n').filter((_, i) => (i !== 0)).map(line => {
         const [x, y, z] = line.split(',').map(s => +s);
         return {x, y, z} as Point;
       }),
-      overlapsWith: undefined as number | undefined,
-      position: undefined as Point | undefined,
+      relativeTo: undefined as number | undefined,
+      position: {x: 0, y: 0, z: 0},
       orientation: (p: Point) => p,
       rotation: (p: Point) => p,
+      index: scannerIndex
     }))
 
   scanners[0]!!.position = {x: 0, y: 0, z: 0};
-  scanners[0]!!.overlapsWith = 0;
+  scanners[0]!!.relativeTo = 0;
 
   let numSolved = 1;
 
   while (numSolved < scanners.length) {
-    for (let i = 1; i < scanners.length; ++i) {
-      if (scanners[i]!!.overlapsWith !== undefined) continue; // Already solved.
-      for (let j = 0; j < scanners.length; ++j) {
-        if (i === j) continue;
-        if (scanners[j]!!.overlapsWith === undefined) continue; // Not solved.
-        // B is already adjusted to be relative to Scanner 0.
-        console.log(`Trying to match ${i} with ${j}`);
-        const a = scanners[i]!!;
-        const b = scanners[j]!!;
+    for (const scanner of scanners.slice(1)) {
+      if (scanner.relativeTo !== undefined) continue; // Already solved.
+      for (const other of scanners) {
+        if (scanner === other) continue;
+        if (other.relativeTo === undefined) continue; // Not solved.
+        // B is already adjusted to be relative to Scanner J.
+        console.log(`${numSolved}: Trying to match ${scanner.index} with ${other.index}`);
         let {
           points: adjustedPoints,
           offset,
           rotation,
           orientation
-        } = adjustPoints(a.points, b.points);
+        } = adjustPoints(scanner.points, other.points);
         if (adjustedPoints.length === 0) {
           // No way to match these two scanners.
           continue;
         }
-        numSolved++;
-        a.overlapsWith = j;
-        a.points = adjustedPoints;
-        a.rotation = rotation;
-        a.orientation = orientation;
-        a.position = {
-          x: offset.x,
-          y: offset.y,
-          z: offset.z
+        scanner.relativeTo = other.index;
+        scanner.points = adjustedPoints;
+        scanner.rotation = rotation;
+        scanner.orientation = orientation;
+        scanner.position = {
+          x: scanner.position.x + offset.x,
+          y: scanner.position.y + offset.y,
+          z: scanner.position.z + offset.z
         };
+        numSolved++;
         break;
       }
     }
@@ -134,7 +133,7 @@ const adjustPoints = (
   const realPoints = new Set<string>();
   for (const scanner of scanners) {
     console.log(`=== Scanner ${i} === `);
-    console.log(`Overlaps with ${scanner.overlapsWith} `);
+    console.log(`Overlaps with ${scanner.relativeTo} `);
     console.log(scanner.position);
     scanner.points.forEach(p => realPoints.add(`${p.x},${p.y},${p.z}`));
     i++;
