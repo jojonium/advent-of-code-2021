@@ -52,7 +52,6 @@ const adjustPoints = (
       const diffY = Object.entries(commonY).filter(([_, c]) => +c >= 12);
       const diffZ = Object.entries(commonZ).filter(([_, c]) => +c >= 12);
       if (diffX.length > 0 && diffY.length > 0 && diffZ.length > 0) {
-        //console.log('Woohoo!');
         const offset = {
           x: -diffX[0]!![0],
           y: -diffY[0]!![0],
@@ -64,18 +63,14 @@ const adjustPoints = (
             y: p.y - +diffY[0]!![0],
             z: p.z - +diffZ[0]!![0],
           })),
-          offset,
-          orientation,
-          rotation
+          offset
         };
       }
     }
   }
   return {
     points: [],
-    offset: {x: 0, y: 0, z: 0},
-    orientation: (p: Point) => p,
-    rotation: (p: Point) => p,
+    offset: {x: 0, y: 0, z: 0}
   };
 }
 
@@ -91,8 +86,6 @@ const adjustPoints = (
       }),
       relativeTo: undefined as number | undefined,
       position: {x: 0, y: 0, z: 0},
-      orientation: (p: Point) => p,
-      rotation: (p: Point) => p,
       index: scannerIndex
     }))
 
@@ -107,13 +100,10 @@ const adjustPoints = (
       for (const other of scanners) {
         if (scanner === other) continue;
         if (other.relativeTo === undefined) continue; // Not solved.
-        // B is already adjusted to be relative to Scanner J.
-        console.log(`${numSolved}: Trying to match ${scanner.index} with ${other.index}`);
+        // other is already adjusted to be relative to scanner 0.
         let {
           points: adjustedPoints,
           offset,
-          rotation,
-          orientation
         } = adjustPoints(scanner.points, other.points);
         if (adjustedPoints.length === 0) {
           // No way to match these two scanners.
@@ -121,8 +111,6 @@ const adjustPoints = (
         }
         scanner.relativeTo = other.index;
         scanner.points = adjustedPoints;
-        scanner.rotation = rotation;
-        scanner.orientation = orientation;
         scanner.position = {
           x: scanner.position.x + offset.x,
           y: scanner.position.y + offset.y,
@@ -138,6 +126,20 @@ const adjustPoints = (
     scanner.points.forEach(p => realPoints.add(`${p.x},${p.y},${p.z}`));
   }
   console.log('Part 1: ' + realPoints.size);
+
+  let part2 = -Infinity;
+  scanners.forEach((scanner, i) => {
+    scanners.slice(i + 1).forEach((other) => {
+      part2 = Math.max(
+        part2,
+        Math.abs(scanner.position.x - other.position.x) +
+        Math.abs(scanner.position.y - other.position.y) +
+        Math.abs(scanner.position.z - other.position.z)
+      );
+    });
+  });
+
+  console.log('Part 2: ' + part2);
 
 })();
 
