@@ -22,6 +22,31 @@ const intersection = (a: Prism, b: Prism): Prism | null => {
   }
 };
 
+const cutOut = (a: Prism, b: Prism): Prism[] => {
+  const i = intersection(a, b);
+  if (i === null) return [a];
+  const out = [] as Prism[];
+  const xs = [[a.x1, i.x1], [i.x1, i.x2], [i.x2, a.x2]] as [number, number][];
+  const ys = [[a.y1, i.y1], [i.y1, i.y2], [i.y2, a.y2]] as [number, number][];
+  const zs = [[a.z1, i.z1], [i.z1, i.z2], [i.z2, a.z2]] as [number, number][];
+  for (const [x1, x2] of xs) {
+    for (const [y1, y2] of ys) {
+      for (const [z1, z2] of zs) {
+        out.push({x1, x2, y1, y2, z1, z2});
+      }
+    }
+  }
+
+  // Remove degenerate rectangles and the intersection itself.
+  return out.filter(p =>
+    volume(p) > 0 && !(
+      p.x1 === i.x1 && p.x2 === i.x2 &&
+      p.y1 === i.y1 && p.y2 === i.y2 &&
+      p.z1 === i.z1 && p.z2 === i.z2
+    )
+  );
+};
+
 const volume = (a: Prism | null) => (a === null) ? 0 :
   Math.abs(a.x2 - a.x1) * Math.abs(a.y2 - a.y1) * Math.abs(a.z2 - a.z1);
 
@@ -65,20 +90,56 @@ const volume = (a: Prism | null) => (a === null) ? 0 :
   }
   console.log('Part 1: ' + cubes.size);
 
+  const a = {
+    x1: 0,
+    x2: 10,
+    y1: 0,
+    y2: 10,
+    z1: 0,
+    z2: 10,
+  };
+  const b = {
+    x1: -2,
+    x2: 6,
+    y1: -2,
+    y2: 6,
+    z1: -2,
+    z2: 6,
+  };
+  console.log(cutOut(b, a));
+
   let part2 = BigInt(0);
-  const onPrisms = [] as Prism[];
+  let onPrisms = [] as Prism[];
   instructions.forEach((ins) => {
     if (ins.on) {
       part2 += BigInt(volume(ins.bounds));
       onPrisms.push(ins.bounds);
     } else {
+      let newOnPrisms = [] as Prism[];
       for (const prism of onPrisms) {
+        const slices = cutOut(prism, ins.bounds);
+        if (slices.length === 0) {
+          newOnPrisms.push(prism);
+          continue;
+        };
+        newOnPrisms.push(...slices);
         part2 -= BigInt(volume(intersection(prism, ins.bounds)));
       }
+      console.log(`onPrisms grew by ${newOnPrisms.length - onPrisms.length}`);
+      if (newOnPrisms.length - onPrisms.length < 0) {
+        console.log(ins);
+      }
+      onPrisms = newOnPrisms;
     }
-    console.log(part2);
+    //console.log(part2);
   });
 
   // Remove any remaining duplicates.
+  onPrisms.forEach((a, i) => {
+    onPrisms.slice(0, i).forEach((b) => {
+      part2 -= BigInt(volume(intersection(a, b)));
+    });
+  });
+
   console.log(part2);
 })();
