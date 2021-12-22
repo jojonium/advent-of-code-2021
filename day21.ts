@@ -38,65 +38,53 @@ const inputFile = process.argv[2] ?? 'inputs/day21.txt';
   let loser = p1.score >= 1000 ? p2 : p1;
   console.log('Part 1: ' + loser.score * dieCount);
 
+  const waysToGet = {} as {[key: number]: number};
+  for (let r1 = 1; r1 <= 3; ++r1) {
+    for (let r2 = 1; r2 <= 3; ++r2) {
+      for (let r3 = 1; r3 <= 3; ++r3) {
+        waysToGet[r1 + r2 + r3] = (waysToGet[r1 + r2 + r3] ?? 0) + 1;
+      }
+    }
+  }
+
   let universes = {} as {[key: string]: number};
-  const finishedGames = {} as {[key: string]: number};
+  let p1Wins = 0;
+  let p2Wins = 0;
   universes[`${p1Pos},${p2Pos},0,0`] = 1;
 
-  const waysToGet = {
-    3: 1,
-    4: 3,
-    5: 4,
-    6: 5,
-    7: 4,
-    8: 3,
-    9: 1
-  } as {[key: number]: number};
 
   while (Object.keys(universes).length > 0) {
     const newStates = {} as {[key: string]: number};
     for (const key in universes) {
       const [p1Pos, p2Pos, p1Score, p2Score] = key.split(',').map(s => +s);
-      for (const roll in waysToGet) {
+      for (const p1Roll in waysToGet) {
         // Simulate p1.
-        const tempP1Pos = ((p1Pos!! + +roll - 1) % 10) + 1;
+        const tempP1Pos = ((p1Pos!! + +p1Roll - 1) % 10) + 1;
         const tempP1Score = p1Score!! + tempP1Pos;
         let newKey = `${tempP1Pos},${p2Pos},${tempP1Score},${p2Score}`;
         if (tempP1Score >= 21) {
-          finishedGames[newKey] = (finishedGames[newKey] ?? 1) *
-            universes[key]!! * waysToGet[roll]!!;
+          p1Wins += universes[key]!! * waysToGet[p1Roll]!!;
           continue;
-        } else { // Keep playing this game
-          newStates[newKey] = (newStates[newKey] ?? 1) *
-            universes[key]!! * waysToGet[roll]!!;
         }
 
-        // Simulate p2.
-        const tempP2Pos = ((p2Pos!! + +roll - 1) % 10) + 1;
-        const tempP2Score = p2Score!! + tempP2Pos;
-        newKey = `${tempP1Pos},${tempP2Pos},${tempP1Score},${tempP2Score}`;
-        if (tempP2Score >= 21) {
-          finishedGames[newKey] = (finishedGames[newKey] ?? 1) *
-            universes[key]!! * waysToGet[roll]!!;
-          continue;
-        } else { // Keep playing this game
-          newStates[newKey] = (newStates[newKey] ?? 1) *
-            universes[key]!! * waysToGet[roll]!!;
+        for (const p2Roll in waysToGet) {
+          // Simulate p2.
+          const tempP2Pos = ((p2Pos!! + +p2Roll - 1) % 10) + 1;
+          const tempP2Score = p2Score!! + tempP2Pos;
+          newKey = `${tempP1Pos},${tempP2Pos},${tempP1Score},${tempP2Score}`;
+          if (tempP2Score >= 21) {
+            p2Wins += universes[key]!! *
+              waysToGet[p1Roll]!! * waysToGet[p2Roll]!!;
+            continue;
+          }
+          newStates[newKey] = (newStates[newKey] ?? 0) +
+            universes[key]!! * waysToGet[p1Roll]!! * waysToGet[p2Roll]!!;
         }
       }
     }
-    console.log(`Len is now ${(Object.keys(newStates).length)}`);
     universes = newStates
   }
 
-  let p1Wins = 0;
-  let p2Wins = 0;
-  for (const key in finishedGames) {
-    const [_a, _b, p1Score, p2Score] = key.split(',').map(s => +s);
-    if (p1Score!! >= 21) p1Wins++;
-    else if (p2Score!! >= 21) p2Wins++;
-    else console.error("Uh oh " + key);
-  }
-  console.log(p1Wins);
-  console.log(p2Wins);
+  console.log('Part 2: ' + Math.max(p1Wins, p2Wins));
 })();
 
